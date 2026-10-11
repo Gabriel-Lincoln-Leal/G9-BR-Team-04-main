@@ -1,0 +1,23 @@
+node_modules/
+target/
+.venv/
+__pycache__/
+*.pyc
+.idea/
+.vscode/
+dist/
+.angular/
+logs/
+*.class
+deploy/oci-package/
+deploy/techmind-oci.zip
+deploy/*-password*
+deploy/*-key.txt
+deploy/*.png
+
+# Artefatos locais e segredos da implantação
+deploy/artifacts/
+deploy/evidence/
+deploy/**/techmind.env
+deploy/**/*-password*
+deploy/**/*-key.txt
