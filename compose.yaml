@@ -1,0 +1,40 @@
+services:
+  python:
+    image: techmind-python:local
+    container_name: techmind-python-local
+    environment:
+      TECHMIND_API_KEY: ${TECHMIND_API_KEY:?Informe a chave de teste}
+      OPENBLAS_NUM_THREADS: "1"
+      OMP_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+    networks:
+      - techmind
+
+  backend:
+    image: techmind-backend:local
+    container_name: techmind-backend-local
+    environment:
+      DB_URL: ${DB_URL:?Informe a conexao Oracle}
+      DB_USERNAME: TECHMIND_TEST
+      DB_PASSWORD: ${DB_PASSWORD:?Informe a senha de teste}
+      DB_DDL_AUTO: validate
+      TECHMIND_API_KEY: ${TECHMIND_API_KEY:?Informe a chave de teste}
+      CLASSIFIER_BASE_URL: http://python:8000
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - techmind
+
+  frontend:
+    image: techmind-frontend:local
+    container_name: techmind-frontend-local
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:4200:80"
+    networks:
+      - techmind
+
+networks:
+  techmind:
+    driver: bridge

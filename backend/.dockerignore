@@ -1,0 +1,8 @@
+target/
+logs/
+.git/
+.idea/
+.env
+.env.*
+*.key
+*.pem

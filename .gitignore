@@ -21,3 +21,4 @@ deploy/evidence/
 deploy/**/techmind.env
 deploy/**/*-password*
 deploy/**/*-key.txt
+.env.local
