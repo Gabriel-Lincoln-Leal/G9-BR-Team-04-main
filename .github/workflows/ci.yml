@@ -1,0 +1,31 @@
+name: CI TechMind
+
+on:
+  push:
+    branches: [main, feat/ci]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  docker-build:
+    name: Construir imagens Docker
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Construir backend e executar testes Maven
+        run: docker build -t techmind-backend:ci ./backend
+
+      - name: Construir classificador Python
+        run: docker build -t techmind-python:ci ./api-python
+
+      - name: Construir frontend Angular com Nginx
+        run: docker build -t techmind-frontend:ci ./frontend
