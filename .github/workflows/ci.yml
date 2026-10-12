@@ -2,7 +2,7 @@ name: CI TechMind
 
 on:
   push:
-    branches: [main, feat/ci]
+    branches: [main, feat/ci, feat/publicar-imagens]
   pull_request:
     branches: [main]
 
@@ -11,9 +11,17 @@ permissions:
 
 jobs:
   docker-build:
-    name: Construir imagens Docker
+    name: Construir e publicar imagens
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_OWNER: gabriel-lincoln-leal
 
     steps:
       - name: Baixar o código
@@ -22,10 +30,39 @@ jobs:
           persist-credentials: false
 
       - name: Construir backend e executar testes Maven
-        run: docker build -t techmind-backend:ci ./backend
+        run: |
+          docker build \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            -t "$REGISTRY/$IMAGE_OWNER/techmind-backend:$GITHUB_SHA" \
+            ./backend
 
       - name: Construir classificador Python
-        run: docker build -t techmind-python:ci ./api-python
+        run: |
+          docker build \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            -t "$REGISTRY/$IMAGE_OWNER/techmind-python:$GITHUB_SHA" \
+            ./api-python
 
       - name: Construir frontend Angular com Nginx
-        run: docker build -t techmind-frontend:ci ./frontend
+        run: |
+          docker build \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            -t "$REGISTRY/$IMAGE_OWNER/techmind-frontend:$GITHUB_SHA" \
+            ./frontend
+
+      - name: Autenticar no GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$GH_TOKEN" |
+            docker login "$REGISTRY" \
+              --username "$GITHUB_ACTOR" \
+              --password-stdin
+
+      - name: Publicar imagens
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker push "$REGISTRY/$IMAGE_OWNER/techmind-backend:$GITHUB_SHA"
+          docker push "$REGISTRY/$IMAGE_OWNER/techmind-python:$GITHUB_SHA"
+          docker push "$REGISTRY/$IMAGE_OWNER/techmind-frontend:$GITHUB_SHA"
